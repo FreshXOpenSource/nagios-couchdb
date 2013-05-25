@@ -1,0 +1,172 @@
+#!/usr/bin/env python
+#
+#   Nagios check couchdb. Requires python-couchFX driver available at
+#   http://wallaby.freshx.de/repo/binary/Linux/python-couchFX/
+#
+#   Usage : check_couchdb <--server server> [--ssl] [--port <port>] [--noauth] [--user <user>] [--pass <pass>]
+#
+
+import sys
+from wallaby.backends.couchdb import *
+from twisted.internet import reactor, defer
+from optparse import OptionParser
+
+# Default behaviour is false, will be reset by options later
+debug=False
+exitCode=2
+reasonString=""
+
+def main():
+    global debug
+    global exitCode
+    (options,args) = getOpts()
+    if options.debug != None and options.debug ==True:
+        debug=True
+    if options.server:
+        proto="http://"
+        port = "5984"
+        if options.ssl != None and options.ssl == True:
+            proto="https://"
+            port = "6984"
+
+        connectionUrl=proto+options.server+':'+port
+        if(debug == True):
+            print connectionUrl
+
+        if(debug == True):
+            print "Starting reactor"
+            reactor.callWhenRunning(run, run, connectionUrl, options)
+        else:
+            d = defer.Deferred()
+            d.addCallback(run,connectionUrl,options)
+            d.addErrback(runFails)
+            reactor.callLater(1, d.callback, 'result')
+
+        try:
+            reactor.run()
+        except:
+            exitCode=2
+            reactor.stop()
+    else:
+	print "No server given. Run with --help to get full help."
+
+    sys.exit(exitCode)
+
+@defer.inlineCallbacks
+def runFails(failure):
+    global exitCode
+    from twisted.python import failure
+    f = failure.Failure()
+    # if(debug == True):
+    # print f.printTraceback()
+    reasonString = f.getErrorMessage()
+    print "CouchDB check failed: "+reasonString
+    yield reactor.stop()
+
+@defer.inlineCallbacks
+def run(self,connectionUrl,options):
+        global exitCode
+        if options.user != None:
+            user=options.user
+            if options.pwd == None:
+                print "password required"
+                exitCode=2 
+            pwd=options.pwd
+
+        if user == None:
+                db = Database('_stats', url=connectionUrl)
+                vdb = Database('', url=connectionUrl)
+        else:
+                db = Database('_stats', url=connectionUrl, user=user, password=pwd)
+                vdb = Database('', url=connectionUrl, user=user, password=pwd)
+            
+#        try:
+#           print 'CE :'+db.connectionEstablished()
+#        except:
+#            reactor.stop()
+        info = yield db.info(returnOnError=True)
+        version = yield vdb.info(returnOnError=True)
+
+        if(debug == True):
+            print info
+
+        if('error' in info):
+            print "CouchDB connection error : "+ info['reason']
+            reasonString = info['reason'] 
+            reactor.stop()
+            return
+
+        if(debug == True):
+            import pprint
+            pprint.pprint(info)
+
+
+        versionStat = version['version']
+        couchStat = info['couchdb']
+        httpdStat = info['httpd_status_codes']
+
+
+        statString='CouchDB '+versionStat+' ok|'
+
+        openDBString = ' openDatabases='+str(int(couchStat['open_databases']['current']))
+        openFileString = ' openFiles='+str(int(couchStat['open_os_files']['current']))
+        requestTimeString = ' requestTimeAvg='+str(int(couchStat['request_time']['mean']))
+
+        if httpdStat['403']['mean'] != None:
+            err403StringA = ' notAllowedRequestsAvg='+str(httpdStat['403']['mean'])
+        else:
+            err403StringA =' notAllowedRequestsAvg=0'
+
+        if httpdStat['403']['sum'] != None:
+            err403String = ' notAllowedRequests='+str(int(httpdStat['403']['sum']))
+        else:
+            err403String=' notAllowedRequests=0'
+
+        if httpdStat['400']['mean'] != None:
+            err400StringA = ' badResponseRequestsAvg='+str(httpdStat['400']['mean'])
+        else:
+            err400StringA = ' badResponseRequestsAvg=0'
+
+        if httpdStat['400']['sum'] != None:
+            err400String = ' badResponseRequests='+str(int(httpdStat['400']['sum']))
+        else:
+            err400String = ' badResponseRequests=0'
+
+        if httpdStat['200']['mean'] != None:
+            err200StringA = ' okRequestsAvg='+str(httpdStat['200']['mean'])
+        else:
+            err200StringA = ' okRequestsAvg=0'
+
+        if httpdStat['200']['sum'] != None:
+            err200String = ' okRequests='+str(int(httpdStat['200']['sum']))
+        else:
+            err200String = ' okRequests=0'
+
+        if(options.full != None and options.full == True):
+            print statString+openDBString+requestTimeString+err403String
+        else:
+            print statString+openDBString+openFileString+requestTimeString+err403String+err400String+err200String+err403StringA+err400StringA+err200StringA
+       
+        exitCode=0 
+        reactor.stop()
+
+def getOpts():
+        parser = OptionParser(version="%prog v0.93, FreshX Labs 2013")
+        parser.add_option("--server", type="string", action="store",  help="Servername to connect to", dest="server")
+        parser.add_option("-H", type="string", action="store",        help="Alias for --server", dest="server")
+        parser.add_option("--ssl", action="store_true",     help="Enable SSL", dest="ssl")
+        parser.add_option("--user", type="string", action="store",    help="Authenticate as user", dest="user")
+        parser.add_option("--pass", type="string", action="store",    help="Authenticate with pass", dest="pwd")
+        parser.add_option("--port", type="string", action="store",    help="Connect to non default port (5984 or 6984", dest="port")
+        parser.add_option("--less", action="store_true",    help="Dump less performance values", dest="full")
+        parser.add_option("--debug", action="store_true",    help="Dump debug info's while running", dest="debug")
+
+        (options,arg) = parser.parse_args()
+	if options.server is None:
+		parser.print_version()
+		parser.print_help()
+		sys.exit(2)
+	else:
+		return (options,arg)
+
+if __name__ == '__main__': main()

@@ -1,0 +1,8 @@
+TODO:
+
+- Full IPv6 support (does not correctly look up v6 Adresses at the moment)
+- decide which performance data is good for the standard output
+- add more performance data points
+- add support for warning and critical checks
+
+Feel free to get back to us for feedback at support@freshx.de
