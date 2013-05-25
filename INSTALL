@@ -17,17 +17,18 @@ INSTALL other (generic Linux, Mac)
 
 get and install the backend drivers with git
 
-git clone https://github.com/FreshXOpenSource/wallaby-backend-couchdb
-git clone https://github.com/FreshXOpenSource/wallaby-backend-http
+# pip install twisted
+# git clone https://github.com/FreshXOpenSource/wallaby-backend-http
+# cd wallaby-backend-http
+# cd ..
+# python setup.py install
+# git clone https://github.com/FreshXOpenSource/wallaby-backend-couchdb
+# cd wallaby-backend-couchdb
+# python setup.py install
+# cd ..
 
 get the check_couchdb via git
 
 git clone https://github.com/FreshXOpenSource/nagios-couchdb.git
 
-TODO:
-
-- Full IPv6 support (does not correctly look up v6 Adresses at the moment)
-- add more performance data points
-- add support for warning and critical checks
-
-Feel free to get back to us for feedback at support@freshx.de
+and off you go!

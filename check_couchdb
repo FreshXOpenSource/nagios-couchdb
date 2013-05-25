@@ -1,25 +1,68 @@
 #!/usr/bin/env python
 #
-#   Nagios check couchdb. Requires python-couchFX driver available at
-#   http://wallaby.freshx.de/repo/binary/Linux/python-couchFX/
+#   Nagios check couchdb 0.9.4 by FreshX Labs / May 25th, 2013
 #
-#   Usage : check_couchdb <--server server> [--ssl] [--port <port>] [--noauth] [--user <user>] [--pass <pass>]
+#   For more info see https://github.com/FreshXOpenSource/nagios-couchdb
+#
+#   Requirements : Unix, Python, Twisted >11.0, wallaby-backend-couchdb
+#
+#   All required packages are prebuild for RedHat Entreprise/CentOS 6 and can be found at
+#   http://wallaby.freshx.de/repo/binary/Linux/RPM/
+#
+#   Usage: check_couchdb [options]
+#
+#   Options:
+#	--version        show program's version number and exit
+#	-h, --help       show this help message and exit
+#	--server=SERVER  Servername to connect to
+#	-H SERVER        Alias for --server
+#	--ssl            Enable SSL
+#	--user=USER      Authenticate as user
+#	--pass=PWD       Authenticate with pass
+#	--port=PORT      Connect to non default port (5984 or 6984
+#	--less           Dump less performance values
+#	--debug          Dump debug info's while running
 #
 
 import sys
-from wallaby.backends.couchdb import *
-from twisted.internet import reactor, defer
 from optparse import OptionParser
+version="0.9.4"
 
-# Default behaviour is false, will be reset by options later
+# Please stop reading from here ;-)
+
+# Default debug behaviour is false, will be reset by options later
 debug=False
 exitCode=2
 reasonString=""
 
-def main():
+parser = OptionParser(version='%prog v'+version+', FreshX Labs 2013')
+parser.add_option("--server", type="string", action="store",  help="Servername to connect to", dest="server")
+parser.add_option("-H", type="string", action="store",        help="Alias for --server", dest="server")
+parser.add_option("--ssl", action="store_true",     help="Enable SSL", dest="ssl")
+parser.add_option("--user", type="string", action="store",    help="Authenticate as user", dest="user")
+parser.add_option("--pass", type="string", action="store",    help="Authenticate with pass", dest="pwd")
+parser.add_option("--port", type="string", action="store",    help="Connect to non default port (5984 or 6984", dest="port")
+parser.add_option("--less", action="store_true",    help="Dump less performance values", dest="full")
+parser.add_option("--debug", action="store_true",    help="Dump debug info's while running", dest="debug")
+
+(options,arg) = parser.parse_args()
+if options.server is None:
+	parser.print_version()
+	parser.print_help()
+	sys.exit(2)
+try:
+	from twisted.internet import reactor, defer
+	from wallaby.backends.couchdb import Database
+except:
+	parser.print_version()
+	print "\nERROR : Required modules not found."
+	print "Please install twisted >= 11 and wallaby-backend-couchdb"
+	print "For more info see https://github.com/FreshXOpenSource/nagios-couchdb"
+	sys.exit(2)
+
+def main(options,args):
     global debug
     global exitCode
-    (options,args) = getOpts()
     if options.debug != None and options.debug ==True:
         debug=True
     if options.server:
@@ -32,6 +75,9 @@ def main():
         connectionUrl=proto+options.server+':'+port
         if(debug == True):
             print connectionUrl
+
+	# Late import, so that the plugin runs already without prereqs for basic info
+
 
         if(debug == True):
             print "Starting reactor"
@@ -67,23 +113,19 @@ def runFails(failure):
 def run(self,connectionUrl,options):
         global exitCode
         if options.user != None:
-            user=options.user
             if options.pwd == None:
-                print "password required"
-                exitCode=2 
-            pwd=options.pwd
+                print "Password required"
+                exitCode=2
+		reactor.stop()
+		return
 
-        if user == None:
+        if options.user == None:
                 db = Database('_stats', url=connectionUrl)
                 vdb = Database('', url=connectionUrl)
         else:
-                db = Database('_stats', url=connectionUrl, user=user, password=pwd)
-                vdb = Database('', url=connectionUrl, user=user, password=pwd)
+                db = Database('_stats', url=connectionUrl, user=options.user, password=options.pwd)
+                vdb = Database('', url=connectionUrl, user=options.user, password=options.pwd)
             
-#        try:
-#           print 'CE :'+db.connectionEstablished()
-#        except:
-#            reactor.stop()
         info = yield db.info(returnOnError=True)
         version = yield vdb.info(returnOnError=True)
 
@@ -150,23 +192,4 @@ def run(self,connectionUrl,options):
         exitCode=0 
         reactor.stop()
 
-def getOpts():
-        parser = OptionParser(version="%prog v0.93, FreshX Labs 2013")
-        parser.add_option("--server", type="string", action="store",  help="Servername to connect to", dest="server")
-        parser.add_option("-H", type="string", action="store",        help="Alias for --server", dest="server")
-        parser.add_option("--ssl", action="store_true",     help="Enable SSL", dest="ssl")
-        parser.add_option("--user", type="string", action="store",    help="Authenticate as user", dest="user")
-        parser.add_option("--pass", type="string", action="store",    help="Authenticate with pass", dest="pwd")
-        parser.add_option("--port", type="string", action="store",    help="Connect to non default port (5984 or 6984", dest="port")
-        parser.add_option("--less", action="store_true",    help="Dump less performance values", dest="full")
-        parser.add_option("--debug", action="store_true",    help="Dump debug info's while running", dest="debug")
-
-        (options,arg) = parser.parse_args()
-	if options.server is None:
-		parser.print_version()
-		parser.print_help()
-		sys.exit(2)
-	else:
-		return (options,arg)
-
-if __name__ == '__main__': main()
+if __name__ == '__main__': main(options,arg)
