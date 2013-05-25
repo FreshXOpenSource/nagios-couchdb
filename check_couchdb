@@ -32,18 +32,19 @@ version="0.9.4"
 
 # Default debug behaviour is false, will be reset by options later
 debug=False
-exitCode=2
-reasonString=""
 
-parser = OptionParser(version='%prog v'+version+', FreshX Labs 2013')
-parser.add_option("--server", type="string", action="store",  help="Servername to connect to", dest="server")
-parser.add_option("-H", type="string", action="store",        help="Alias for --server", dest="server")
-parser.add_option("--ssl", action="store_true",     help="Enable SSL", dest="ssl")
-parser.add_option("--user", type="string", action="store",    help="Authenticate as user", dest="user")
-parser.add_option("--pass", type="string", action="store",    help="Authenticate with pass", dest="pwd")
-parser.add_option("--port", type="string", action="store",    help="Connect to non default port (5984 or 6984", dest="port")
-parser.add_option("--less", action="store_true",    help="Dump less performance values", dest="full")
-parser.add_option("--debug", action="store_true",    help="Dump debug info's while running", dest="debug")
+# Default exit code
+exitCode=2
+
+parser = OptionParser(version='%prog v'+version+', (C) FreshX Labs 2013')
+parser.add_option("--server", type="string", action="store", help="Servername to connect to", dest="server")
+parser.add_option("-H", type="string", action="store",       help="Alias for --server", dest="server")
+parser.add_option("--user", type="string", action="store",   help="Authenticate as user", dest="user")
+parser.add_option("--pass", type="string", action="store",   help="Authenticate with pass", dest="pwd")
+parser.add_option("--port", type="string", action="store",   help="Connect to non default port", dest="port")
+parser.add_option("--ssl", action="store_true",	  help="Enable SSL", dest="ssl")
+parser.add_option("--less", action="store_true",  help="Dump less performance values", dest="full")
+parser.add_option("--debug", action="store_true", help="Dump debug info's while running", dest="debug")
 
 (options,arg) = parser.parse_args()
 if options.server is None:
@@ -93,8 +94,6 @@ def main(options,args):
         except:
             exitCode=2
             reactor.stop()
-    else:
-	print "No server given. Run with --help to get full help."
 
     sys.exit(exitCode)
 
@@ -103,10 +102,7 @@ def runFails(failure):
     global exitCode
     from twisted.python import failure
     f = failure.Failure()
-    # if(debug == True):
-    # print f.printTraceback()
-    reasonString = f.getErrorMessage()
-    print "CouchDB check failed: "+reasonString
+    print "CouchDB check failed: "+f.getErrorMessage()
     yield reactor.stop()
 
 @defer.inlineCallbacks
@@ -133,8 +129,7 @@ def run(self,connectionUrl,options):
             print info
 
         if('error' in info):
-            print "CouchDB connection error : "+ info['reason']
-            reasonString = info['reason'] 
+ 	    print "CouchDB connection error : "+ info['reason']
             reactor.stop()
             return
 

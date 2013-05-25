@@ -1,9 +1,9 @@
 TODO:
 
-- Full IPv6 support (does not correctly look up v6 Adresses at the moment)
-- decide which performance data is good for the standard output
-- add more performance data points
+- full IPv6 support (does not correctly look up IPv6 adresses atm)
 - add support for warning and critical checks
 - add support for password file
+- add more performance data points
+- decide which performance data is preferred for the standard output
 
-Feel free to get back to us for feedback at support@freshx.de
+Feel free to get back to us for feedback

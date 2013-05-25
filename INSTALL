@@ -1,4 +1,4 @@
-INSTALL RedHat 6 / CentOS 6
+INSTALL on RedHat 6 / CentOS 6
 
 on RedHat EL6, SL6 or CentOS 6 : use wallaby repo and do a yum install
 
@@ -7,13 +7,13 @@ yum install nagios-plugins-couchdb
 
 or get all the RPM files from the website manually
 
-INSTALL other RPM Systems
+INSTALL on other RPM Systems
 
-Get the SRPM and rebuild it for your platform
+Get the SRPM or specfile and rebuild it for your platform with rpmbuild
 
-The SRPMs are at http://wallaby.freshx.de/repo/binary/Linux/RPM/SRPM
+The SRPMs are at http://wallaby.freshx.de/repo/binary/Linux/RPM/SRPM, the spec file is included in the git
 
-INSTALL other (generic Linux, Mac)
+INSTALL other (generic Linux, Unix)
 
 get and install the backend drivers with git
 
@@ -27,8 +27,10 @@ get and install the backend drivers with git
 # python setup.py install
 # cd ..
 
-get the check_couchdb via git
+Now get the check_couchdb via git
 
-git clone https://github.com/FreshXOpenSource/nagios-couchdb.git
+# git clone https://github.com/FreshXOpenSource/nagios-couchdb.git
+# cd nagios-couchdb
+# make instal
 
 and off you go!
