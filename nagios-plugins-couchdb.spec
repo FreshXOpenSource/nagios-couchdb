@@ -11,7 +11,7 @@ BuildArch:      noarch
 Requires:  	python-wallaby-backend-couchdb, twisted >= 11.0
 
 %description
-This package provides a couchdb monitoring plugin. The plugin can connect to remote hosts via https or http, anonymous or using username and password and can produce basic performance data. This plugin also demonstrates the asynchroneuous couchdb Python driver. All packages are found as RPM and SRPM at http://wallaby.freshx.de/repo/binary/Linux/RPM
+This package provides a couchdb monitoring plugin. The plugin can connect to remote hosts via https or http, anonymous or using username and password and can produce basic performance data. This plugin also demonstrates the asynchroneuous couchdb Python driver. All packages are found as RPM and SRPM at http://wallaby.freshx.de/repo/binary/Linux/RPM, the sources are at https://github.com/FreshXOpenSource/nagios-couchdb
 
 %prep
 %setup -q
