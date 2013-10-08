@@ -1,7 +1,7 @@
 Name:           nagios-plugins-couchdb
 Version:        0.9
 Vendor:		FreshX Labs
-Release:        4.fx%{?dist}
+Release:        5.fx%{?dist}
 Summary:        A nagios plugin to monitor couchdb databases
 Group:          Development/Languages
 License:        BSD
@@ -31,6 +31,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/nagios/plugins/check_couchdb
 
 %changelog
+* Tue Oct 08 2013 Kai Mosebach
+- check for empty couchStat values before converting to int
 * Sat May 25 2013 Kai Mosebach
 - Ready for nagios exchange and github
 * Fri May 24 2013 Kai Mosebach

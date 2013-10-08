@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Nagios check couchdb 0.9.4 by FreshX Labs / May 25th, 2013
+#   Nagios check couchdb 0.9.5 by FreshX Labs / Oct 08th, 2013
 #
 #   For more info see https://github.com/FreshXOpenSource/nagios-couchdb
 #
@@ -26,7 +26,7 @@
 
 import sys
 from optparse import OptionParser
-version="0.9.4"
+version="0.9.5"
 
 # Please stop reading from here ;-)
 
@@ -142,12 +142,26 @@ def run(self,connectionUrl,options):
         couchStat = info['couchdb']
         httpdStat = info['httpd_status_codes']
 
+	if type(info) != dict:
+ 	    print "CouchDB returned unexpected data or no JSON structure"
+            reactor.stop()
+            return
 
         statString='CouchDB '+versionStat+' ok|'
 
-        openDBString = ' openDatabases='+str(int(couchStat['open_databases']['current']))
-        openFileString = ' openFiles='+str(int(couchStat['open_os_files']['current']))
-        requestTimeString = ' requestTimeAvg='+str(int(couchStat['request_time']['mean']))
+	if couchStat['open_databases']['current'] == None:
+		openDBString= 'openDatabases=0'
+	else:
+        	openDBString = ' openDatabases='+str(int(couchStat['open_databases']['current']))
+	if couchStat['open_os_files']['current'] == None:
+		openFileString = ' openFiles=0'
+	else:
+        	openFileString = ' openFiles='+str(int(couchStat['open_os_files']['current']))
+	if couchStat['request_time']['mean'] == None:
+		requestTimeString = ' requestTimeAvg=0'
+	else:
+        	requestTimeString = ' requestTimeAvg='+str(int(couchStat['request_time']['mean']))
+
 
         if httpdStat['403']['mean'] != None:
             err403StringA = ' notAllowedRequestsAvg='+str(httpdStat['403']['mean'])
